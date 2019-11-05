@@ -1,0 +1,1196 @@
+
+1. Load data and create spark data frame 
+
+
+```scala
+val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)
+```
+
+
+
+
+    sqlContext: org.apache.spark.sql.hive.HiveContext = org.apache.spark.sql.hive.HiveContext@63349f99
+
+
+
+
+
+```scala
+import org.apache.spark.sql._
+import org.apache.spark.sql.types._
+import sqlContext.implicits._
+```
+
+
+
+
+    import org.apache.spark.sql._
+    import org.apache.spark.sql.types._
+    import sqlContext.implicits._
+
+
+
+
+
+```scala
+val lines = sc.textFile(" /⁨upalroy⁩/Downloads⁩/Cloud_Spark_and_Scala_Project⁩/Project for submission⁩/input_data_for_code⁩/bank-full.csv")
+```
+
+
+
+
+    lines: org.apache.spark.rdd.RDD[String] =  /⁨upalroy⁩/Downloads⁩/Cloud_Spark_and_Scala_Project⁩/Project for submission⁩/input_data_for_code⁩/bank-full.csv MapPartitionsRDD[111] at textFile at <console>:65
+
+
+
+
+
+```scala
+val data = sc.textFile("bank-full.csv").map(x => x.split(";(?=([^\"]*\"[^\"]*\")*[^\"]*$)",-1))
+```
+
+
+
+
+    data: org.apache.spark.rdd.RDD[Array[String]] = MapPartitionsRDD[114] at map at <console>:65
+
+
+
+
+
+```scala
+val header = data.first()
+val filtered = data.filter(x => x(0)!= header(0))
+val rdds = filtered.map(x => Row(x(0).toInt, x(1),x(2),x(3),x(4), x(5).toInt,x(6),x(7),x(8), x(9).toInt,x(10),x(11).toInt,x(12).toInt, x(13).toInt,x(14).toInt,x(15),x(16)  ))
+```
+
+
+
+
+    header: Array[String] = Array("age", "job", "marital", "education", "default", "balance", "housing", "loan", "contact", "day", "month", "duration", "campaign", "pdays", "previous", "poutcome", "y")
+    filtered: org.apache.spark.rdd.RDD[Array[String]] = MapPartitionsRDD[115] at filter at <console>:70
+    rdds: org.apache.spark.rdd.RDD[org.apache.spark.sql.Row] = MapPartitionsRDD[116] at map at <console>:71
+
+
+
+
+
+```scala
+val rdds = data.filter(x => x(0)!= header(0)).map(x => Row(x(0), x(1),x(2),x(3),x(4), x(5),x(6),x(7),x(8), x(9),x(10),x(11),x(12), x(13),x(14),x(15),x(16)  ))
+```
+
+
+
+
+    rdds: org.apache.spark.rdd.RDD[org.apache.spark.sql.Row] = MapPartitionsRDD[118] at map at <console>:68
+
+
+
+
+
+```scala
+val schema = StructType( List(StructField("age", IntegerType, true),StructField("job", StringType, true) ,StructField("marital", StringType, true),StructField("education", StringType,
+ true) ,StructField("default", StringType, true),StructField("balance", IntegerType, true)))
+```
+
+
+
+
+    schema: org.apache.spark.sql.types.StructType = StructType(StructField(age,IntegerType,true), StructField(job,StringType,true), StructField(marital,StringType,true), StructField(education,StringType,true), StructField(default,StringType,true), StructField(balance,IntegerType,true))
+
+
+
+
+
+```scala
+val schema = StructType( List(StructField("age", IntegerType, true),StructField("job", StringType, true) ,StructField("marital", StringType, true),StructField("education", StringType, true) ,StructField("default", StringType, true),StructField("balance", IntegerType, true) ,StructField("housing", StringType, true) 	,StructField("loan", StringType, true) ,StructField("contact", StringType, true) ,StructField("day", IntegerType, true) ,StructField("month", StringType, true) ,StructField("duration", IntegerType, true) ,StructField("campaign", IntegerType, true) ,StructField("pdays", IntegerType, true) ,StructField("previous", IntegerType, true) ,StructField("poutcome", StringType, true) ,StructField("y", StringType, true)) )
+```
+
+
+
+
+    schema: org.apache.spark.sql.types.StructType = StructType(StructField(age,IntegerType,true), StructField(job,StringType,true), StructField(marital,StringType,true), StructField(education,StringType,true), StructField(default,StringType,true), StructField(balance,IntegerType,true), StructField(housing,StringType,true), StructField(loan,StringType,true), StructField(contact,StringType,true), StructField(day,IntegerType,true), StructField(month,StringType,true), StructField(duration,IntegerType,true), StructField(campaign,IntegerType,true), StructField(pdays,IntegerType,true), StructField(previous,IntegerType,true), StructField(poutcome,StringType,true), StructField(y,StringType,true))
+
+
+
+
+
+```scala
+val df = sqlContext.createDataFrame(rdds, schema)
+```
+
+
+
+
+    df: org.apache.spark.sql.DataFrame = [age: int, job: string ... 15 more fields]
+
+
+
+
+
+```scala
+val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)
+```
+
+
+
+
+    sqlContext: org.apache.spark.sql.hive.HiveContext = org.apache.spark.sql.hive.HiveContext@1b56f733
+
+
+
+
+
+```scala
+val df = sqlContext.read.format("com.databricks.spark.csv").option("header","true").option("inferSchema","true").option("delimiter",";").load("bank-full.csv")
+```
+
+
+
+
+    df: org.apache.spark.sql.DataFrame = [age: int, job: string ... 15 more fields]
+
+
+
+
+
+```scala
+df.show()
+```
+
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+
+    |age|         job| marital|education|default|balance|housing|loan|contact|day|month|duration|campaign|pdays|previous|poutcome|  y|
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+
+    | 58|  management| married| tertiary|     no|   2143|    yes|  no|unknown|  5|  may|     261|       1|   -1|       0| unknown| no|
+    | 44|  technician|  single|secondary|     no|     29|    yes|  no|unknown|  5|  may|     151|       1|   -1|       0| unknown| no|
+    | 33|entrepreneur| married|secondary|     no|      2|    yes| yes|unknown|  5|  may|      76|       1|   -1|       0| unknown| no|
+    | 47| blue-collar| married|  unknown|     no|   1506|    yes|  no|unknown|  5|  may|      92|       1|   -1|       0| unknown| no|
+    | 33|     unknown|  single|  unknown|     no|      1|     no|  no|unknown|  5|  may|     198|       1|   -1|       0| unknown| no|
+    | 35|  management| married| tertiary|     no|    231|    yes|  no|unknown|  5|  may|     139|       1|   -1|       0| unknown| no|
+    | 28|  management|  single| tertiary|     no|    447|    yes| yes|unknown|  5|  may|     217|       1|   -1|       0| unknown| no|
+    | 42|entrepreneur|divorced| tertiary|    yes|      2|    yes|  no|unknown|  5|  may|     380|       1|   -1|       0| unknown| no|
+    | 58|     retired| married|  primary|     no|    121|    yes|  no|unknown|  5|  may|      50|       1|   -1|       0| unknown| no|
+    | 43|  technician|  single|secondary|     no|    593|    yes|  no|unknown|  5|  may|      55|       1|   -1|       0| unknown| no|
+    | 41|      admin.|divorced|secondary|     no|    270|    yes|  no|unknown|  5|  may|     222|       1|   -1|       0| unknown| no|
+    | 29|      admin.|  single|secondary|     no|    390|    yes|  no|unknown|  5|  may|     137|       1|   -1|       0| unknown| no|
+    | 53|  technician| married|secondary|     no|      6|    yes|  no|unknown|  5|  may|     517|       1|   -1|       0| unknown| no|
+    | 58|  technician| married|  unknown|     no|     71|    yes|  no|unknown|  5|  may|      71|       1|   -1|       0| unknown| no|
+    | 57|    services| married|secondary|     no|    162|    yes|  no|unknown|  5|  may|     174|       1|   -1|       0| unknown| no|
+    | 51|     retired| married|  primary|     no|    229|    yes|  no|unknown|  5|  may|     353|       1|   -1|       0| unknown| no|
+    | 45|      admin.|  single|  unknown|     no|     13|    yes|  no|unknown|  5|  may|      98|       1|   -1|       0| unknown| no|
+    | 57| blue-collar| married|  primary|     no|     52|    yes|  no|unknown|  5|  may|      38|       1|   -1|       0| unknown| no|
+    | 60|     retired| married|  primary|     no|     60|    yes|  no|unknown|  5|  may|     219|       1|   -1|       0| unknown| no|
+    | 33|    services| married|secondary|     no|      0|    yes|  no|unknown|  5|  may|      54|       1|   -1|       0| unknown| no|
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+
+    only showing top 20 rows
+    
+
+
+2. Give marketing success rate. (No. of people subscribed / total no. of entries)
+
+
+```scala
+val suc = df.filter($"y" === "yes").count.toFloat / df.count.toFloat *100
+```
+
+
+
+
+    suc: Float = 11.698481
+
+
+
+
+
+```scala
+val fail = df.filter($"y" === "no").count.toFloat / df.count.toFloat *100
+```
+
+
+
+
+    fail: Float = 88.30152
+
+
+
+
+3. Check max, min, Mean and median age of average targeted customer 
+
+
+```scala
+import org.apache.spark.sql.functions.{min, max, avg}
+```
+
+
+
+
+    import org.apache.spark.sql.functions.{min, max, avg}
+
+
+
+
+
+```scala
+df.agg(max($"age"),min($"age"), avg($"age")).show()
+```
+
+    +--------+--------+-----------------+
+    |max(age)|min(age)|         avg(age)|
+    +--------+--------+-----------------+
+    |      95|      18|40.93621021432837|
+    +--------+--------+-----------------+
+    
+
+
+4. Check quality of clients by checking average balance, median balance of clients 
+
+
+```scala
+df.agg(max($"balance"),min($"balance"), avg($"balance")).show()
+```
+
+    +------------+------------+------------------+
+    |max(balance)|min(balance)|      avg(balance)|
+    +------------+------------+------------------+
+    |      102127|       -8019|1362.2720576850766|
+    +------------+------------+------------------+
+    
+
+
+
+```scala
+df.select(avg($"balance")).show()
+```
+
+    +------------------+
+    |      avg(balance)|
+    +------------------+
+    |1362.2720576850766|
+    +------------------+
+    
+
+
+
+```scala
+import org.apache.spark._
+import org.apache.spark.graphx._
+import org.apache.spark.rdd.RDD
+```
+
+
+
+
+    import org.apache.spark._
+    import org.apache.spark.graphx._
+    import org.apache.spark.rdd.RDD
+
+
+
+
+
+```scala
+val median = sqlContext.sql("SELECT percentile_approx(balance, 0.5) FROM bank").show()
+```
+
+
+    org.apache.spark.sql.AnalysisException: java.lang.RuntimeException: java.lang.RuntimeException: Unable to instantiate org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient;
+
+      at org.apache.spark.sql.hive.HiveExternalCatalog.withClient(HiveExternalCatalog.scala:106)
+
+      at org.apache.spark.sql.hive.HiveExternalCatalog.databaseExists(HiveExternalCatalog.scala:214)
+
+      at org.apache.spark.sql.internal.SharedState.externalCatalog$lzycompute(SharedState.scala:114)
+
+      at org.apache.spark.sql.internal.SharedState.externalCatalog(SharedState.scala:102)
+
+      at org.apache.spark.sql.internal.SharedState.globalTempViewManager$lzycompute(SharedState.scala:141)
+
+      at org.apache.spark.sql.internal.SharedState.globalTempViewManager(SharedState.scala:136)
+
+      at org.apache.spark.sql.hive.HiveSessionStateBuilder$$anonfun$2.apply(HiveSessionStateBuilder.scala:55)
+
+      at org.apache.spark.sql.hive.HiveSessionStateBuilder$$anonfun$2.apply(HiveSessionStateBuilder.scala:55)
+
+      at org.apache.spark.sql.catalyst.catalog.SessionCatalog.globalTempViewManager$lzycompute(SessionCatalog.scala:91)
+
+      at org.apache.spark.sql.catalyst.catalog.SessionCatalog.globalTempViewManager(SessionCatalog.scala:91)
+
+      at org.apache.spark.sql.catalyst.catalog.SessionCatalog.lookupRelation(SessionCatalog.scala:701)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.org$apache$spark$sql$catalyst$analysis$Analyzer$ResolveRelations$$lookupTableFromCatalog(Analyzer.scala:730)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.resolveRelation(Analyzer.scala:685)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$$anonfun$apply$8.applyOrElse(Analyzer.scala:715)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$$anonfun$apply$8.applyOrElse(Analyzer.scala:708)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsUp$1$$anonfun$apply$1.apply(AnalysisHelper.scala:90)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsUp$1$$anonfun$apply$1.apply(AnalysisHelper.scala:90)
+
+      at org.apache.spark.sql.catalyst.trees.CurrentOrigin$.withOrigin(TreeNode.scala:70)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsUp$1.apply(AnalysisHelper.scala:89)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsUp$1.apply(AnalysisHelper.scala:86)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.allowInvokingTransformsInAnalyzer(AnalysisHelper.scala:194)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$class.resolveOperatorsUp(AnalysisHelper.scala:86)
+
+      at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.resolveOperatorsUp(LogicalPlan.scala:29)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsUp$1$$anonfun$1.apply(AnalysisHelper.scala:87)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsUp$1$$anonfun$1.apply(AnalysisHelper.scala:87)
+
+      at org.apache.spark.sql.catalyst.trees.TreeNode$$anonfun$4.apply(TreeNode.scala:326)
+
+      at org.apache.spark.sql.catalyst.trees.TreeNode.mapProductIterator(TreeNode.scala:187)
+
+      at org.apache.spark.sql.catalyst.trees.TreeNode.mapChildren(TreeNode.scala:324)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsUp$1.apply(AnalysisHelper.scala:87)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsUp$1.apply(AnalysisHelper.scala:86)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.allowInvokingTransformsInAnalyzer(AnalysisHelper.scala:194)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$class.resolveOperatorsUp(AnalysisHelper.scala:86)
+
+      at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.resolveOperatorsUp(LogicalPlan.scala:29)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.apply(Analyzer.scala:708)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer$ResolveRelations$.apply(Analyzer.scala:654)
+
+      at org.apache.spark.sql.catalyst.rules.RuleExecutor$$anonfun$execute$1$$anonfun$apply$1.apply(RuleExecutor.scala:87)
+
+      at org.apache.spark.sql.catalyst.rules.RuleExecutor$$anonfun$execute$1$$anonfun$apply$1.apply(RuleExecutor.scala:84)
+
+      at scala.collection.LinearSeqOptimized$class.foldLeft(LinearSeqOptimized.scala:124)
+
+      at scala.collection.immutable.List.foldLeft(List.scala:84)
+
+      at org.apache.spark.sql.catalyst.rules.RuleExecutor$$anonfun$execute$1.apply(RuleExecutor.scala:84)
+
+      at org.apache.spark.sql.catalyst.rules.RuleExecutor$$anonfun$execute$1.apply(RuleExecutor.scala:76)
+
+      at scala.collection.immutable.List.foreach(List.scala:392)
+
+      at org.apache.spark.sql.catalyst.rules.RuleExecutor.execute(RuleExecutor.scala:76)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer.org$apache$spark$sql$catalyst$analysis$Analyzer$$executeSameContext(Analyzer.scala:127)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer.execute(Analyzer.scala:121)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer$$anonfun$executeAndCheck$1.apply(Analyzer.scala:106)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer$$anonfun$executeAndCheck$1.apply(Analyzer.scala:105)
+
+      at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.markInAnalyzer(AnalysisHelper.scala:201)
+
+      at org.apache.spark.sql.catalyst.analysis.Analyzer.executeAndCheck(Analyzer.scala:105)
+
+      at org.apache.spark.sql.execution.QueryExecution.analyzed$lzycompute(QueryExecution.scala:57)
+
+      at org.apache.spark.sql.execution.QueryExecution.analyzed(QueryExecution.scala:55)
+
+      at org.apache.spark.sql.execution.QueryExecution.assertAnalyzed(QueryExecution.scala:47)
+
+      at org.apache.spark.sql.Dataset$.ofRows(Dataset.scala:78)
+
+      at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:642)
+
+      at org.apache.spark.sql.SQLContext.sql(SQLContext.scala:694)
+
+      ... 64 elided
+
+    Caused by: java.lang.RuntimeException: java.lang.RuntimeException: Unable to instantiate org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient
+
+      at org.apache.hadoop.hive.ql.session.SessionState.start(SessionState.java:522)
+
+      at org.apache.spark.sql.hive.client.HiveClientImpl.newState(HiveClientImpl.scala:183)
+
+      at org.apache.spark.sql.hive.client.HiveClientImpl.<init>(HiveClientImpl.scala:117)
+
+      at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+
+      at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)
+
+      at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+
+      at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:488)
+
+      at org.apache.spark.sql.hive.client.IsolatedClientLoader.createClient(IsolatedClientLoader.scala:271)
+
+      at org.apache.spark.sql.hive.HiveUtils$.newClientForMetadata(HiveUtils.scala:384)
+
+      at org.apache.spark.sql.hive.HiveUtils$.newClientForMetadata(HiveUtils.scala:286)
+
+      at org.apache.spark.sql.hive.HiveExternalCatalog.client$lzycompute(HiveExternalCatalog.scala:66)
+
+      at org.apache.spark.sql.hive.HiveExternalCatalog.client(HiveExternalCatalog.scala:65)
+
+      at org.apache.spark.sql.hive.HiveExternalCatalog$$anonfun$databaseExists$1.apply$mcZ$sp(HiveExternalCatalog.scala:215)
+
+      at org.apache.spark.sql.hive.HiveExternalCatalog$$anonfun$databaseExists$1.apply(HiveExternalCatalog.scala:215)
+
+      at org.apache.spark.sql.hive.HiveExternalCatalog$$anonfun$databaseExists$1.apply(HiveExternalCatalog.scala:215)
+
+      at org.apache.spark.sql.hive.HiveExternalCatalog.withClient(HiveExternalCatalog.scala:97)
+
+      ... 118 more
+
+    Caused by: java.lang.RuntimeException: Unable to instantiate org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient
+
+      at org.apache.hadoop.hive.metastore.MetaStoreUtils.newInstance(MetaStoreUtils.java:1523)
+
+      at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.<init>(RetryingMetaStoreClient.java:86)
+
+      at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(RetryingMetaStoreClient.java:132)
+
+      at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(RetryingMetaStoreClient.java:104)
+
+      at org.apache.hadoop.hive.ql.metadata.Hive.createMetaStoreClient(Hive.java:3005)
+
+      at org.apache.hadoop.hive.ql.metadata.Hive.getMSC(Hive.java:3024)
+
+      at org.apache.hadoop.hive.ql.session.SessionState.start(SessionState.java:503)
+
+      ... 133 more
+
+    Caused by: java.lang.reflect.InvocationTargetException: java.lang.NoClassDefFoundError: Could not initialize class org.datanucleus.api.jdo.JDOPersistenceManagerFactory
+
+      at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+
+      at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)
+
+      at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+
+      at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:488)
+
+      at org.apache.hadoop.hive.metastore.MetaStoreUtils.newInstance(MetaStoreUtils.java:1521)
+
+      ... 139 more
+
+    Caused by: java.lang.NoClassDefFoundError: Could not initialize class org.datanucleus.api.jdo.JDOPersistenceManagerFactory
+
+      at java.base/java.lang.Class.forName0(Native Method)
+
+      at java.base/java.lang.Class.forName(Class.java:374)
+
+      at javax.jdo.JDOHelper$18.run(JDOHelper.java:2018)
+
+      at javax.jdo.JDOHelper$18.run(JDOHelper.java:2016)
+
+      at java.base/java.security.AccessController.doPrivileged(Native Method)
+
+      at javax.jdo.JDOHelper.forName(JDOHelper.java:2015)
+
+      at javax.jdo.JDOHelper.invokeGetPersistenceManagerFactoryOnImplementation(JDOHelper.java:1162)
+
+      at javax.jdo.JDOHelper.getPersistenceManagerFactory(JDOHelper.java:808)
+
+      at javax.jdo.JDOHelper.getPersistenceManagerFactory(JDOHelper.java:701)
+
+      at org.apache.hadoop.hive.metastore.ObjectStore.getPMF(ObjectStore.java:365)
+
+      at org.apache.hadoop.hive.metastore.ObjectStore.getPersistenceManager(ObjectStore.java:394)
+
+      at org.apache.hadoop.hive.metastore.ObjectStore.initialize(ObjectStore.java:291)
+
+      at org.apache.hadoop.hive.metastore.ObjectStore.setConf(ObjectStore.java:258)
+
+      at org.apache.hadoop.util.ReflectionUtils.setConf(ReflectionUtils.java:76)
+
+      at org.apache.hadoop.util.ReflectionUtils.newInstance(ReflectionUtils.java:136)
+
+      at org.apache.hadoop.hive.metastore.RawStoreProxy.<init>(RawStoreProxy.java:57)
+
+      at org.apache.hadoop.hive.metastore.RawStoreProxy.getProxy(RawStoreProxy.java:66)
+
+      at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.newRawStore(HiveMetaStore.java:593)
+
+      at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.getMS(HiveMetaStore.java:571)
+
+      at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.createDefaultDB(HiveMetaStore.java:620)
+
+      at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.init(HiveMetaStore.java:461)
+
+      at org.apache.hadoop.hive.metastore.RetryingHMSHandler.<init>(RetryingHMSHandler.java:66)
+
+      at org.apache.hadoop.hive.metastore.RetryingHMSHandler.getProxy(RetryingHMSHandler.java:72)
+
+      at org.apache.hadoop.hive.metastore.HiveMetaStore.newRetryingHMSHandler(HiveMetaStore.java:5762)
+
+      at org.apache.hadoop.hive.metastore.HiveMetaStoreClient.<init>(HiveMetaStoreClient.java:199)
+
+      at org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient.<init>(SessionHiveMetaStoreClient.java:74)
+
+      ... 144 more
+
+    
+
+
+
+```scala
+import scala.collection.mutable
+import scala.util.Random
+```
+
+
+
+
+    import scala.collection.mutable
+    import scala.util.Random
+
+
+
+
+
+```scala
+def median[df](s: Seq[df])(implicit n: Fractional[df]) = {
+  import n._
+  val (lower, upper) = s.sortWith(_<_).splitAt(s.size / 2)
+  if (s.size % 2 == 0) (lower.last + upper.head) / fromInt(2) else upper.head
+}
+```
+
+
+
+
+    median: [df](s: Seq[df])(implicit n: Fractional[df])df
+
+
+
+
+
+```scala
+import org.apache.spark.sql.types._
+```
+
+
+
+
+    import org.apache.spark.sql.types._
+
+
+
+
+
+```scala
+val numericFeatures = df.schema.filter(_.dataType != StringType)
+```
+
+
+
+
+    numericFeatures: Seq[org.apache.spark.sql.types.StructField] = List(StructField(age,IntegerType,true), StructField(balance,IntegerType,true), StructField(day,IntegerType,true), StructField(duration,IntegerType,true), StructField(campaign,IntegerType,true), StructField(pdays,IntegerType,true), StructField(previous,IntegerType,true))
+
+
+
+
+
+```scala
+val description = df.describe(numericFeatures.map(_.name): _*)
+```
+
+
+
+
+    description: org.apache.spark.sql.DataFrame = [summary: string, age: string ... 6 more fields]
+
+
+
+
+
+```scala
+
+```
+
+
+    <console>:118: error: not found: value rowSeq
+
+    val $ires12 = rowSeq
+
+                  ^
+
+    <console>:113: error: not found: value rowSeq
+
+           rowSeq = Seq(Seq("q1"+:quantils(0): _*),
+
+           ^
+
+    
+
+
+5. Check if age matters in marketing subscription for deposit 
+
+
+```scala
+import org.apache.commons.math3.stat.descriptive
+```
+
+
+
+
+    import org.apache.commons.math3.stat.descriptive
+
+
+
+
+
+```scala
+df.createOrReplaceTempView("sample")
+```
+
+
+```scala
+df.select(max($"age")).show()
+```
+
+    +--------+
+    |max(age)|
+    +--------+
+    |      95|
+    +--------+
+    
+
+
+
+```scala
+df.select(min($"age")).show()
+```
+
+    +--------+
+    |min(age)|
+    +--------+
+    |      18|
+    +--------+
+    
+
+
+
+```scala
+df.select(avg($"age")).show()
+```
+
+    +-----------------+
+    |         avg(age)|
+    +-----------------+
+    |40.93621021432837|
+    +-----------------+
+    
+
+
+5. Check if age matters in marketing subscription for deposit (Integrated)
+
+
+```scala
+import org.apache.spark.sql.functions.{min, max, avg}
+```
+
+
+
+
+    import org.apache.spark.sql.functions.{min, max, avg}
+
+
+
+
+
+```scala
+df.agg(max($"age"),min($"age"), avg($"age")).show()
+```
+
+    +--------+--------+-----------------+
+    |max(age)|min(age)|         avg(age)|
+    +--------+--------+-----------------+
+    |      95|      18|40.93621021432837|
+    +--------+--------+-----------------+
+    
+
+
+6. Check if marital status mattered for subscription to deposit. 
+
+
+```scala
+df.groupBy($"y".alias("Did the customer Subscribed")).agg(count($"marital").alias("Marital Count")).show
+```
+
+    +---------------------------+-------------+
+    |Did the customer Subscribed|Marital Count|
+    +---------------------------+-------------+
+    |                         no|        39922|
+    |                        yes|         5289|
+    +---------------------------+-------------+
+    
+
+
+7. Check if age and marital status together mattered for subscription to deposit scheme 
+
+
+```scala
+df.groupBy("marital","y").count.sort($"count").show
+```
+
+    +--------+---+-----+
+    | marital|  y|count|
+    +--------+---+-----+
+    |divorced|yes|  622|
+    |  single|yes| 1912|
+    | married|yes| 2755|
+    |divorced| no| 4585|
+    |  single| no|10878|
+    | married| no|24459|
+    +--------+---+-----+
+    
+
+
+
+```scala
+import org.apache.commons.math3.stat.descriptive
+```
+
+
+
+
+    import org.apache.commons.math3.stat.descriptive
+
+
+
+
+
+```scala
+df.createOrReplaceTempView("sample")
+```
+
+
+```scala
+df.groupBy($"y".alias("Did the customer Subscribed")).agg(count($"marital").alias("Marital Count")).show
+```
+
+    +---------------------------+-------------+
+    |Did the customer Subscribed|Marital Count|
+    +---------------------------+-------------+
+    |                         no|        39922|
+    |                        yes|         5289|
+    +---------------------------+-------------+
+    
+
+
+
+```scala
+df.groupBy("marital","y").count.sort($"count").show
+```
+
+    +--------+---+-----+
+    | marital|  y|count|
+    +--------+---+-----+
+    |divorced|yes|  622|
+    |  single|yes| 1912|
+    | married|yes| 2755|
+    |divorced| no| 4585|
+    |  single| no|10878|
+    | married| no|24459|
+    +--------+---+-----+
+    
+
+
+8. Do Feature engineering for age column and find right age effect on campaign
+
+
+```scala
+import org.apache.spark.sql.functions.udf
+```
+
+
+
+
+    import org.apache.spark.sql.functions.udf
+
+
+
+
+
+```scala
+def ageToCategory = udf((age:Int) => {
+      age match {
+      case t if t < 30 => "young"
+      case t if t > 65 => "Old"
+      case _ => "mid"
+      }
+      }
+     )
+```
+
+
+
+
+    ageToCategory: org.apache.spark.sql.expressions.UserDefinedFunction
+
+
+
+
+
+```scala
+val newdf = df.withColumn("agecat",ageToCategory(df("age")))
+```
+
+
+
+
+    newdf: org.apache.spark.sql.DataFrame = [age: int, job: string ... 16 more fields]
+
+
+
+
+
+```scala
+newdf.groupBy("agecat","y").count().sort($"count".desc).show
+```
+
+    +------+---+-----+
+    |agecat|  y|count|
+    +------+---+-----+
+    |   mid| no|35146|
+    | young| no| 4345|
+    |   mid|yes| 4041|
+    | young|yes|  928|
+    |   Old| no|  431|
+    |   Old|yes|  320|
+    +------+---+-----+
+    
+
+
+
+```scala
+import org.apache.spark.sql.functions._
+```
+
+
+
+
+    import org.apache.spark.sql.functions._
+
+
+
+
+
+```scala
+val newDF = df.withColumn("bin", when($"y" === "yes" , 1).otherwise(0))
+```
+
+
+
+
+    newDF: org.apache.spark.sql.DataFrame = [age: int, job: string ... 16 more fields]
+
+
+
+
+
+```scala
+newDF.show(10)
+```
+
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+---+
+    |age|         job| marital|education|default|balance|housing|loan|contact|day|month|duration|campaign|pdays|previous|poutcome|  y|bin|
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+---+
+    | 58|  management| married| tertiary|     no|   2143|    yes|  no|unknown|  5|  may|     261|       1|   -1|       0| unknown| no|  0|
+    | 44|  technician|  single|secondary|     no|     29|    yes|  no|unknown|  5|  may|     151|       1|   -1|       0| unknown| no|  0|
+    | 33|entrepreneur| married|secondary|     no|      2|    yes| yes|unknown|  5|  may|      76|       1|   -1|       0| unknown| no|  0|
+    | 47| blue-collar| married|  unknown|     no|   1506|    yes|  no|unknown|  5|  may|      92|       1|   -1|       0| unknown| no|  0|
+    | 33|     unknown|  single|  unknown|     no|      1|     no|  no|unknown|  5|  may|     198|       1|   -1|       0| unknown| no|  0|
+    | 35|  management| married| tertiary|     no|    231|    yes|  no|unknown|  5|  may|     139|       1|   -1|       0| unknown| no|  0|
+    | 28|  management|  single| tertiary|     no|    447|    yes| yes|unknown|  5|  may|     217|       1|   -1|       0| unknown| no|  0|
+    | 42|entrepreneur|divorced| tertiary|    yes|      2|    yes|  no|unknown|  5|  may|     380|       1|   -1|       0| unknown| no|  0|
+    | 58|     retired| married|  primary|     no|    121|    yes|  no|unknown|  5|  may|      50|       1|   -1|       0| unknown| no|  0|
+    | 43|  technician|  single|secondary|     no|    593|    yes|  no|unknown|  5|  may|      55|       1|   -1|       0| unknown| no|  0|
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+---+
+    only showing top 10 rows
+    
+
+
+
+```scala
+import org.apache.spark.ml.linalg.{Matrix, Vectors}
+import org.apache.spark.ml.stat.Correlation
+import org.apache.spark.sql.Row
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.linalg.Vectors
+```
+
+
+
+
+    import org.apache.spark.ml.linalg.{Matrix, Vectors}
+    import org.apache.spark.ml.stat.Correlation
+    import org.apache.spark.sql.Row
+    import org.apache.spark.ml.feature.VectorAssembler
+    import org.apache.spark.ml.linalg.Vectors
+
+
+
+
+
+```scala
+val corrDF = newDF.select($"age",$"bin")
+```
+
+
+
+
+    corrDF: org.apache.spark.sql.DataFrame = [age: int, bin: int]
+
+
+
+
+
+```scala
+val assembler = new VectorAssembler()
+  .setInputCols(Array("age", "bin"))
+  .setOutputCol("features")
+```
+
+
+
+
+    assembler: org.apache.spark.ml.feature.VectorAssembler = vecAssembler_0b68a128b137
+
+
+
+
+
+```scala
+val output = assembler.transform(corrDF)
+```
+
+
+
+
+    output: org.apache.spark.sql.DataFrame = [age: int, bin: int ... 1 more field]
+
+
+
+
+
+```scala
+println("Spearman Correlation: " + "\n", Correlation.corr(output, "features", "spearman").head())
+```
+
+    (Spearman Correlation: 
+    ,[1.0                    -0.008749987770931828  
+    -0.008749987770931828  1.0                    ])
+
+
+
+```scala
+println("Pearson Correlation: " + corrDF.stat.corr("age","bin"))
+```
+
+    Pearson Correlation: 0.025155017088386994
+
+
+
+```scala
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.clustering.KMeans
+import org.apache.spark.ml.feature.VectorAssembler
+```
+
+
+
+
+    import org.apache.spark.mllib.linalg.Vectors
+    import org.apache.spark.mllib.clustering.KMeans
+    import org.apache.spark.ml.feature.VectorAssembler
+
+
+
+
+
+```scala
+val featureco1 = Array("age","bin")
+val assembler = new VectorAssembler().setInputCols(featureco1).setOutputCol("features")
+```
+
+
+
+
+    featureco1: Array[String] = Array(age, bin)
+    assembler: org.apache.spark.ml.feature.VectorAssembler = vecAssembler_2d37239a7dcb
+
+
+
+
+
+```scala
+val df2 = assembler.transform(newDF)
+df2.show()
+```
+
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+---+----------+
+    |age|         job| marital|education|default|balance|housing|loan|contact|day|month|duration|campaign|pdays|previous|poutcome|  y|bin|  features|
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+---+----------+
+    | 58|  management| married| tertiary|     no|   2143|    yes|  no|unknown|  5|  may|     261|       1|   -1|       0| unknown| no|  0|[58.0,0.0]|
+    | 44|  technician|  single|secondary|     no|     29|    yes|  no|unknown|  5|  may|     151|       1|   -1|       0| unknown| no|  0|[44.0,0.0]|
+    | 33|entrepreneur| married|secondary|     no|      2|    yes| yes|unknown|  5|  may|      76|       1|   -1|       0| unknown| no|  0|[33.0,0.0]|
+    | 47| blue-collar| married|  unknown|     no|   1506|    yes|  no|unknown|  5|  may|      92|       1|   -1|       0| unknown| no|  0|[47.0,0.0]|
+    | 33|     unknown|  single|  unknown|     no|      1|     no|  no|unknown|  5|  may|     198|       1|   -1|       0| unknown| no|  0|[33.0,0.0]|
+    | 35|  management| married| tertiary|     no|    231|    yes|  no|unknown|  5|  may|     139|       1|   -1|       0| unknown| no|  0|[35.0,0.0]|
+    | 28|  management|  single| tertiary|     no|    447|    yes| yes|unknown|  5|  may|     217|       1|   -1|       0| unknown| no|  0|[28.0,0.0]|
+    | 42|entrepreneur|divorced| tertiary|    yes|      2|    yes|  no|unknown|  5|  may|     380|       1|   -1|       0| unknown| no|  0|[42.0,0.0]|
+    | 58|     retired| married|  primary|     no|    121|    yes|  no|unknown|  5|  may|      50|       1|   -1|       0| unknown| no|  0|[58.0,0.0]|
+    | 43|  technician|  single|secondary|     no|    593|    yes|  no|unknown|  5|  may|      55|       1|   -1|       0| unknown| no|  0|[43.0,0.0]|
+    | 41|      admin.|divorced|secondary|     no|    270|    yes|  no|unknown|  5|  may|     222|       1|   -1|       0| unknown| no|  0|[41.0,0.0]|
+    | 29|      admin.|  single|secondary|     no|    390|    yes|  no|unknown|  5|  may|     137|       1|   -1|       0| unknown| no|  0|[29.0,0.0]|
+    | 53|  technician| married|secondary|     no|      6|    yes|  no|unknown|  5|  may|     517|       1|   -1|       0| unknown| no|  0|[53.0,0.0]|
+    | 58|  technician| married|  unknown|     no|     71|    yes|  no|unknown|  5|  may|      71|       1|   -1|       0| unknown| no|  0|[58.0,0.0]|
+    | 57|    services| married|secondary|     no|    162|    yes|  no|unknown|  5|  may|     174|       1|   -1|       0| unknown| no|  0|[57.0,0.0]|
+    | 51|     retired| married|  primary|     no|    229|    yes|  no|unknown|  5|  may|     353|       1|   -1|       0| unknown| no|  0|[51.0,0.0]|
+    | 45|      admin.|  single|  unknown|     no|     13|    yes|  no|unknown|  5|  may|      98|       1|   -1|       0| unknown| no|  0|[45.0,0.0]|
+    | 57| blue-collar| married|  primary|     no|     52|    yes|  no|unknown|  5|  may|      38|       1|   -1|       0| unknown| no|  0|[57.0,0.0]|
+    | 60|     retired| married|  primary|     no|     60|    yes|  no|unknown|  5|  may|     219|       1|   -1|       0| unknown| no|  0|[60.0,0.0]|
+    | 33|    services| married|secondary|     no|      0|    yes|  no|unknown|  5|  may|      54|       1|   -1|       0| unknown| no|  0|[33.0,0.0]|
+    +---+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+---+----------+
+    only showing top 20 rows
+    
+
+
+
+
+
+    df2: org.apache.spark.sql.DataFrame = [age: int, job: string ... 17 more fields]
+
+
+
+
+
+```scala
+val Array(trainData,testData) = df2.randomSplit(Array(.7, .3))
+```
+
+
+
+
+    trainData: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [age: int, job: string ... 17 more fields]
+    testData: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [age: int, job: string ... 17 more fields]
+
+
+
+
+
+```scala
+println("Total rows of complete DF: " + df2.count() + "\n" +
+"Train Data: " + trainData.count() + "\n" +
+"Test Data: " + testData.count())
+```
+
+    Total rows of complete DF: 45211
+    Train Data: 31600
+    Test Data: 13611
+
+
+
+```scala
+import scala.reflect.runtime.universe
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.functions.mean
+```
+
+
+
+
+    import scala.reflect.runtime.universe
+    import org.apache.spark.SparkConf
+    import org.apache.spark.SparkContext
+    import org.apache.spark.sql.DataFrame
+    import org.apache.spark.sql.SQLContext
+    import org.apache.spark.sql.functions.mean
+
+
+
+
+
+```scala
+val ageRDD = sqlContext.udf.register("ageRDD",(age:Int) => {
+if (age < 20)
+"Teen"
+else if (age > 20 && age <= 32)
+"Young"
+else if (age > 33 && age <= 55)
+"Middle Aged"
+else
+"Old"
+})
+```
+
+
+
+
+    ageRDD: org.apache.spark.sql.expressions.UserDefinedFunction = UserDefinedFunction(<function1>,StringType,Some(List(IntegerType)))
+
+
+
+
+
+```scala
+val banknewDF = df.withColumn("age",ageRDD(df("age")))
+```
+
+
+
+
+    banknewDF: org.apache.spark.sql.DataFrame = [age: string, job: string ... 15 more fields]
+
+
+
+
+
+```scala
+banknewDF.registerTempTable("bank_new")
+```
+
+
+```scala
+banknewDF.show()
+```
+
+    +-----------+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+
+    |        age|         job| marital|education|default|balance|housing|loan|contact|day|month|duration|campaign|pdays|previous|poutcome|  y|
+    +-----------+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+
+    |        Old|  management| married| tertiary|     no|   2143|    yes|  no|unknown|  5|  may|     261|       1|   -1|       0| unknown| no|
+    |Middle Aged|  technician|  single|secondary|     no|     29|    yes|  no|unknown|  5|  may|     151|       1|   -1|       0| unknown| no|
+    |        Old|entrepreneur| married|secondary|     no|      2|    yes| yes|unknown|  5|  may|      76|       1|   -1|       0| unknown| no|
+    |Middle Aged| blue-collar| married|  unknown|     no|   1506|    yes|  no|unknown|  5|  may|      92|       1|   -1|       0| unknown| no|
+    |        Old|     unknown|  single|  unknown|     no|      1|     no|  no|unknown|  5|  may|     198|       1|   -1|       0| unknown| no|
+    |Middle Aged|  management| married| tertiary|     no|    231|    yes|  no|unknown|  5|  may|     139|       1|   -1|       0| unknown| no|
+    |      Young|  management|  single| tertiary|     no|    447|    yes| yes|unknown|  5|  may|     217|       1|   -1|       0| unknown| no|
+    |Middle Aged|entrepreneur|divorced| tertiary|    yes|      2|    yes|  no|unknown|  5|  may|     380|       1|   -1|       0| unknown| no|
+    |        Old|     retired| married|  primary|     no|    121|    yes|  no|unknown|  5|  may|      50|       1|   -1|       0| unknown| no|
+    |Middle Aged|  technician|  single|secondary|     no|    593|    yes|  no|unknown|  5|  may|      55|       1|   -1|       0| unknown| no|
+    |Middle Aged|      admin.|divorced|secondary|     no|    270|    yes|  no|unknown|  5|  may|     222|       1|   -1|       0| unknown| no|
+    |      Young|      admin.|  single|secondary|     no|    390|    yes|  no|unknown|  5|  may|     137|       1|   -1|       0| unknown| no|
+    |Middle Aged|  technician| married|secondary|     no|      6|    yes|  no|unknown|  5|  may|     517|       1|   -1|       0| unknown| no|
+    |        Old|  technician| married|  unknown|     no|     71|    yes|  no|unknown|  5|  may|      71|       1|   -1|       0| unknown| no|
+    |        Old|    services| married|secondary|     no|    162|    yes|  no|unknown|  5|  may|     174|       1|   -1|       0| unknown| no|
+    |Middle Aged|     retired| married|  primary|     no|    229|    yes|  no|unknown|  5|  may|     353|       1|   -1|       0| unknown| no|
+    |Middle Aged|      admin.|  single|  unknown|     no|     13|    yes|  no|unknown|  5|  may|      98|       1|   -1|       0| unknown| no|
+    |        Old| blue-collar| married|  primary|     no|     52|    yes|  no|unknown|  5|  may|      38|       1|   -1|       0| unknown| no|
+    |        Old|     retired| married|  primary|     no|     60|    yes|  no|unknown|  5|  may|     219|       1|   -1|       0| unknown| no|
+    |        Old|    services| married|secondary|     no|      0|    yes|  no|unknown|  5|  may|      54|       1|   -1|       0| unknown| no|
+    +-----------+------------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+---+
+    only showing top 20 rows
+    
+
+
+
+```scala
+
+```
